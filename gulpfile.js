@@ -18,7 +18,7 @@ gulp.task('stylus', function() {
 
 gulp.task('babel', function () {
     return browserify({
-        entries: './js/index.jsx',
+        entries: './js/Index.jsx',
         extensions: ['.jsx'],
         debug: true
     })
