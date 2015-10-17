@@ -17,6 +17,7 @@
     "browserify": "^11.0.0",
     "classnames": "1.2.1",
     "express": "^4.13.3",
+    "flux": "^2.1.1",
     "gulp": "^3.9.0",
     "gulp-babel": "^5.1.0",
     "gulp-clean": "^0.3.1",

@@ -1,18 +1,44 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Router, Route, Link } from 'react-router';
+import classNames from 'classnames';
 
 class Moment extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { likes: this.props.likes };
+    }
+
     getPictureUrl() {
         var attachments = this.props.attachments;
         var len = attachments.length;
         var REG_EXP = /\d/g;
 
-        for (var i = len; i--;) {
-            return REG_EXP.test(attachments[i].file.title);
+        if (!len) {
+            return null;
         }
 
-        return attachments[len - 1];
+        for (var i = len; i--;) {
+            var pic = attachments[i].file;
+            if (REG_EXP.test(pic)) {
+                return pic.path;
+            }
+        }
+
+        return attachments[len - 1].file.path;
+    }
+
+    onClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var likes = this.state.likes;
+        var isLiked = this.state.liked;
+
+        this.setState({
+            liked: !isLiked,
+            likes: isLiked ? likes - 1 : likes + 1
+        })
     }
 
     render() {
@@ -20,8 +46,10 @@ class Moment extends React.Component {
         var picUrl = this.getPictureUrl();
 
         if (picUrl) {
-            picNode = <div className="moment-pic"><img src="{ picUrl }" /></div>;
+            picNode = <div className="moment-pic thumbnail"><img src={ picUrl } /></div>;
         }
+
+
 
         return (
             <a href="#" className="moment list-group-item">
@@ -29,13 +57,28 @@ class Moment extends React.Component {
 
                 <h5 className="moment-story-title">
                     { this.props.storyTitle }
-                    <span className="moment-author label label-info">{ this.props.owner.name }</span>
+                    <span className="moment-author label label-info">{ this.props.ownerName }</span>
                 </h5>
                 { picNode }
-                <button className="btn btn-primary btn-xs" type="button">
-                    Like <span className="badge">{ this.props.stats.likes }</span>
-                </button>
+                <LikeBtn liked={ this.state.liked } likes={ this.state.likes } onClick={ this.onClick.bind(this) } />
             </a>
+        )
+    }
+}
+
+class LikeBtn extends React.Component {
+    render() {
+        var BtnClassName = classNames({
+            'btn': true,
+            'btn-success': this.props.liked,
+            'btn-primary': true,
+            'btn-xs': true
+        });
+
+        return (
+            <button className={ BtnClassName } onClick={ this.props.onClick } type="button">
+                Like <span className="badge">{ this.props.likes }</span>
+            </button>
         )
     }
 }
@@ -85,7 +128,17 @@ class Moments extends React.Component {
 
     render() {
         var List = this.state.items.map((item) => {
-            return <Moment key={ item.objectPreview.id } { ...item.objectPreview } />;
+            var previewData = item.objectPreview;
+            return (
+                <Moment
+                    key={ previewData.id }
+                    likes={ previewData.stats.likes }
+                    ownerName={ previewData.owner.name }
+                    title={ previewData.title }
+                    storyTitle={ previewData.storyTitle }
+                    attachments={ previewData.attachments }
+                />
+            );
         });
 
         return (
@@ -107,17 +160,4 @@ class App extends React.Component {
     }
 }
 
-class NoMatch extends React.Component {
-    render() {
-        return 404;
-    }
-}
-
-ReactDOM.render((
-    <Router>
-        <Route path="/" component={App}>
-            <Route name="items" component={App} />
-            <Route path="*" component={NoMatch}/>
-        </Route>
-    </Router>
-), document.getElementById('app'));
+ReactDOM.render(<App />, document.getElementById('app'));
