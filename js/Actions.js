@@ -3,41 +3,6 @@ import Dispatcher from './Dispatcher'
 var _failedQueue = [];
 var checkConnectionId;
 
-function likeDislike(isLike, momentId, storyId) {
-    var dispatchData = {
-        action: isLike ? 'like' : 'dislike',
-        id: storyId
-    };
-
-    Dispatcher.dispatch(dispatchData);
-
-    sendLikeDislikeRequest({
-        isLike: true,
-        momentId,
-        storyId
-    })
-}
-
-function sendLikeDislikeRequest(params) {
-    var method = params.isLike ? 'POST' : 'DELETE';
-
-    $.ajax({
-        type: method,
-        url: `https://storia.me/api/core/stories/${params.storyId}/moments/${params.momentId}/like`,
-        xhrFields: {
-            withCredentials: true
-        }
-    }).done(function() {
-        clearInterval(checkConnectionId);
-    }).fail(() => {
-        _failedQueue.push(params);
-
-        if (!checkConnectionId) {
-            checkConnectionId = checkConnection();
-        }
-    });
-}
-
 var Actions = {
     like(momentId, storyId) {
         likeDislike(true, momentId, storyId);
@@ -71,6 +36,60 @@ var Actions = {
     }
 };
 
+/**
+ * @param {boolean} isLike
+ * @param {string} momentId
+ * @param {string} storyId
+ */
+function likeDislike(isLike, momentId, storyId) {
+    var dispatchData = {
+        action: isLike ? 'like' : 'dislike',
+        id: storyId
+    };
+
+    Dispatcher.dispatch(dispatchData);
+
+    sendLikeDislikeRequest({
+        isLike: true,
+        momentId,
+        storyId
+    })
+}
+
+/**
+ * Send like/dislike request
+ * @description if request fail, it will add request in _failedQueue
+ * _failedQueue try to send request again, when connection will appear
+ * @param {object} params
+ */
+function sendLikeDislikeRequest(params) {
+    var method = params.isLike ? 'POST' : 'DELETE';
+
+    $.ajax({
+        type: method,
+        url: `https://storia.me/api/core/stories/${params.storyId}/moments/${params.momentId}/like`,
+        xhrFields: {
+            withCredentials: true
+        }
+    }).done(function() {
+        clearInterval(checkConnectionId);
+    }).fail(() => {
+
+        //TODO (improvement) add it also in localStorge
+        _failedQueue.push(params);
+
+        if (!checkConnectionId) {
+            checkConnectionId = checkConnection();
+        }
+    });
+}
+
+/**
+ * Check connection existing.
+ * @description Check connection every 2 sec; onLine property sometimes can give wrong result,
+ * therefore it rechecks it by simple 'ping' request.
+ * @returns {number}
+ */
 function checkConnection() {
     return setInterval(function() {
         if (window.navigator.onLine) {
