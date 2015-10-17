@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Router, Route, Link } from 'react-router';
 import classNames from 'classnames';
+import Store from './Store';
+import Actions from './Actions';
 
 class Moment extends React.Component {
     constructor(props) {
@@ -32,13 +34,11 @@ class Moment extends React.Component {
         e.preventDefault();
         e.stopPropagation();
 
-        var likes = this.state.likes;
-        var isLiked = this.state.liked;
-
-        this.setState({
-            liked: !isLiked,
-            likes: isLiked ? likes - 1 : likes + 1
-        })
+        if (!this.props.liked) {
+            Actions.like(this.props.storyId, this.props.momentId);
+        } else {
+            Actions.dislike(this.props.storyId, this.props.momentId);
+        }
     }
 
     render() {
@@ -49,8 +49,6 @@ class Moment extends React.Component {
             picNode = <div className="moment-pic thumbnail"><img src={ picUrl } /></div>;
         }
 
-
-
         return (
             <a href="#" className="moment list-group-item">
                 <h4 className="moment-title">{ this.props.title }</h4>
@@ -60,7 +58,7 @@ class Moment extends React.Component {
                     <span className="moment-author label label-info">{ this.props.ownerName }</span>
                 </h5>
                 { picNode }
-                <LikeBtn liked={ this.state.liked } likes={ this.state.likes } onClick={ this.onClick.bind(this) } />
+                <LikeBtn liked={ this.props.liked } likes={ this.props.likes } onClick={ this.onClick.bind(this) } />
             </a>
         )
     }
@@ -90,7 +88,12 @@ class Moments extends React.Component {
     }
 
     componentDidMount() {
-        this.setAuth().then(this.getMoments());
+        this.setAuth().then(Actions.getAll());
+        Store.addChangeListener(this.getMoments.bind(this));
+    }
+
+    componentWillUnmount() {
+        Store.removeChangeListener(this.getMoments.bind(this));
     }
 
     setAuth() {
@@ -112,17 +115,8 @@ class Moments extends React.Component {
     }
 
     getMoments() {
-        var that = this;
-
-        $.ajax({
-            type: 'GET',
-            url: 'https://storia.me/api/feed/content',
-            xhrFields: {
-                withCredentials: true
-            },
-            success: function(data) {
-                that.setState(data);
-            }
+        this.setState({
+            items: Store.getAll()
         });
     }
 
@@ -137,6 +131,9 @@ class Moments extends React.Component {
                     title={ previewData.title }
                     storyTitle={ previewData.storyTitle }
                     attachments={ previewData.attachments }
+                    storyId={ previewData.storyId }
+                    momentId={ previewData.id }
+                    liked={ previewData.liked }
                 />
             );
         });
@@ -159,5 +156,7 @@ class App extends React.Component {
         )
     }
 }
+
+
 
 ReactDOM.render(<App />, document.getElementById('app'));
