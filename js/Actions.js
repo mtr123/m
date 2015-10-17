@@ -73,9 +73,10 @@ function sendLikeDislikeRequest(params) {
         }
     }).done(function() {
         clearInterval(checkConnectionId);
+        checkConnectionId = null;
     }).fail(() => {
 
-        //TODO (improvement) add it also in localStorge
+        //TODO (improvement) add it also in localStorage
         _failedQueue.push(params);
 
         if (!checkConnectionId) {
