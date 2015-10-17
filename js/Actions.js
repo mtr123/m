@@ -1,38 +1,50 @@
 import Dispatcher from './Dispatcher'
 
-function _likeDislike(isLike, momentId, storyId) {
-    var method = isLike ? 'POST' : 'DELETE';
+var _failedQueue = [];
+var checkConnectionId;
+
+function likeDislike(isLike, momentId, storyId) {
+    var dispatchData = {
+        action: isLike ? 'like' : 'dislike',
+        id: storyId
+    };
+
+    Dispatcher.dispatch(dispatchData);
+
+    sendLikeDislikeRequest({
+        isLike: true,
+        momentId,
+        storyId
+    })
+}
+
+function sendLikeDislikeRequest(params) {
+    var method = params.isLike ? 'POST' : 'DELETE';
 
     $.ajax({
         type: method,
-        url: `https://storia.me/api/core/stories/${storyId}/moments/${momentId}/like`,
+        url: `https://storia.me/api/core/stories/${params.storyId}/moments/${params.momentId}/like`,
         xhrFields: {
             withCredentials: true
-        },
-        success: function(data) {
-            // if something going wrong and request returns an error,
-            // we can cancel changes by calling _likeDislike again
+        }
+    }).done(function() {
+        clearInterval(checkConnectionId);
+    }).fail(() => {
+        _failedQueue.push(params);
+
+        if (!checkConnectionId) {
+            checkConnectionId = checkConnection();
         }
     });
 }
 
 var Actions = {
     like(momentId, storyId) {
-        Dispatcher.dispatch({
-            action: 'like',
-            id: storyId
-        });
-
-        _likeDislike(true, momentId, storyId);
+        likeDislike(true, momentId, storyId);
     },
 
     dislike(momentId, storyId) {
-        Dispatcher.dispatch({
-            action: 'dislike',
-            id: storyId
-        });
-
-        _likeDislike(false, momentId, storyId);
+        likeDislike(false, momentId, storyId);
     },
 
     getAll() {
@@ -41,15 +53,36 @@ var Actions = {
             url: 'https://storia.me/api/feed/content',
             xhrFields: {
                 withCredentials: true
-            },
-            success: function(data) {
-                Dispatcher.dispatch({
-                    action: 'getAll',
-                    data: data
-                });
             }
+        }).always((data) => {
+            Dispatcher.dispatch({
+                action: 'getAll',
+                data: data ? data : { items: JSON.parse(localStorage.getItem(items)) }
+            });
+        })
+    },
+
+    sendFailedRequests() {
+        _failedQueue.forEach((params) => {
+            sendLikeDislikeRequest(params)
         });
+
+        _failedQueue = [];
     }
 };
+
+function checkConnection() {
+    return setInterval(function() {
+        if (window.navigator.onLine) {
+            Actions.sendFailedRequests();
+        } else {
+            $.get('/ping', (data) => {
+                if (data === 'pong') {
+                    Actions.sendFailedRequests();
+                }
+            })
+        }
+    }, 2000);
+}
 
 export default Actions;

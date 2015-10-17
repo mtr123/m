@@ -10,7 +10,12 @@ var Store = Object.assign({}, EventEmitter.prototype, {
     },
 
     emitChange() {
+        this.syncStorage();
         this.emit('change');
+    },
+
+    syncStorage() {
+        localStorage.setItem('items', JSON.stringify(_items));
     },
 
     /**
@@ -32,24 +37,17 @@ var Store = Object.assign({}, EventEmitter.prototype, {
 
         switch(action) {
             case 'like':
-                _items.forEach((item) => {
-                    if (item.objectPreview.id === payload.id) {
-                        item.objectPreview.stats.likes += 1;
-                        item.objectPreview.liked = true;
-                        return false;
-                    }
-                });
-                Store.emitChange();
-                break;
-
             case 'dislike':
                 _items.forEach((item) => {
+                    var likes = item.objectPreview.stats.likes;
+
                     if (item.objectPreview.id === payload.id) {
-                        item.objectPreview.stats.likes -= 1;
-                        item.objectPreview.liked = false;
+                        item.objectPreview.stats.likes = action === 'like' ? likes + 1 : likes - 1;
+                        item.objectPreview.liked = action === 'like';
                         return false;
                     }
                 });
+
                 Store.emitChange();
                 break;
 
