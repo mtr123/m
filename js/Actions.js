@@ -53,7 +53,7 @@ function likeDislike(isLike, momentId, storyId) {
     Dispatcher.dispatch(dispatchData);
 
     sendLikeDislikeRequest({
-        isLike: true,
+        isLike: isLike,
         momentId,
         storyId
     })
