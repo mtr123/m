@@ -10,30 +10,12 @@ export default class Feed extends React.Component {
     }
 
     componentDidMount() {
-        this.setAuth().then(Actions.getAll());
+        Actions.getAll();
         Store.addChangeListener(this.getMoments.bind(this));
     }
 
     componentWillUnmount() {
         Store.removeChangeListener(this.getMoments.bind(this));
-    }
-
-    setAuth() {
-        return new Promise((resolve) => {
-            $.ajax({
-                type: 'POST',
-                url: 'https://storia.me/api/acl/auth/Selfish/test_task@example.com',
-                data: JSON.stringify({password: 'qwe123', remember: false, token: ''}),
-                xhrFields: {
-                    withCredentials: true
-                },
-                success: function() {
-                    resolve();
-                },
-                contentType: 'application/json',
-                dataType: 'json'
-            });
-        });
     }
 
     getMoments() {

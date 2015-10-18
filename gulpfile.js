@@ -22,12 +22,12 @@ gulp.task('babel', function () {
         extensions: ['.jsx'],
         debug: true
     })
-        .transform(babelify.configure({
-            experimental: true
-        }))
-        .bundle()
-        .pipe(source('bundle.js'))
-        .pipe(gulp.dest('./dist'));
+    .transform(babelify.configure({
+        experimental: true
+    }))
+    .bundle()
+    .pipe(source('bundle.js'))
+    .pipe(gulp.dest('./dist'));
 });
 
 gulp.task('watch', ['stylus', 'babel'], function() {
