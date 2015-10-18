@@ -18,6 +18,9 @@ export default class Feed extends React.Component {
         Store.removeChangeListener(this.getMoments.bind(this));
     }
 
+    /**
+     * Gets moments from Store
+     */
     getMoments() {
         this.setState({
             items: Store.getAll()

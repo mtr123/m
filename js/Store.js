@@ -32,6 +32,9 @@ var Store = Object.assign({}, EventEmitter.prototype, {
         this.removeListener(CHANGE_EVENT, callback);
     },
 
+    /**
+     * Handle events from Action
+     */
     dispatcherIndex: dispatcher.register(function(payload) {
         var action = payload.action;
 

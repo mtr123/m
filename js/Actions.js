@@ -12,6 +12,9 @@ var Actions = {
         likeDislike(false, momentId, storyId);
     },
 
+    /**
+     * Fetch moments from server
+     */
     getAll() {
         $.ajax({
             type: 'GET',

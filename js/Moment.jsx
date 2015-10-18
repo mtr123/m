@@ -9,6 +9,10 @@ export default class Moment extends React.Component {
         this.state = { likes: this.props.likes };
     }
 
+    /**
+     * Find suitable url of the picture
+     * @returns {string}
+     */
     getPictureUrl() {
         var attachments = this.props.attachments;
         var len = attachments.length;
@@ -28,6 +32,10 @@ export default class Moment extends React.Component {
         return attachments[len - 1].file.path;
     }
 
+    /**
+     * Handle "Like Button" clicks
+     * @param {object} e
+     */
     onClick(e) {
         e.preventDefault();
         e.stopPropagation();
